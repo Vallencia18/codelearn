@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeLearn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: app shell — module rail on the left (grid of tiles on phones), one lesson column on the right that reads top to bottom: materi → visual → contoh → latihan → kuis */
+:root{
+  --bg:#f2f4f9; --surface:#ffffff; --sunk:#e8ecf5;
+  --ink:#141c33; --muted:#56617e; --line:#d6dcea;
+  --accent:#2f58cd; --accent-ink:#ffffff; --accent-soft:#e3e9fb;
+  --sun:#f3b80b; --sun-soft:#fdf2cf; --sun-ink:#5a4300;
+  --ok:#187a50; --ok-soft:#dff3e8; --bad:#b83a32; --bad-soft:#fbe5e3;
+  --console:#0f162b; --console-ink:#dfe6f7; --console-dim:#8592b3; --console-line:#25304f;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0c1120; --surface:#141b2e; --sunk:#1a2339;
+  --ink:#e5eaf6; --muted:#98a3c1; --line:#27314d;
+  --accent:#7d9bff; --accent-ink:#0c1120; --accent-soft:#1d2748;
+  --sun:#ffcd3c; --sun-soft:#2f2810; --sun-ink:#ffe7a0;
+  --ok:#4fcf92; --ok-soft:#12291f; --bad:#ff7a70; --bad-soft:#331816;
+  --console:#080c18; --console-ink:#dfe6f7; --console-dim:#7d89aa; --console-line:#1e2742;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1120; --surface:#141b2e; --sunk:#1a2339;
+  --ink:#e5eaf6; --muted:#98a3c1; --line:#27314d;
+  --accent:#7d9bff; --accent-ink:#0c1120; --accent-soft:#1d2748;
+  --sun:#ffcd3c; --sun-soft:#2f2810; --sun-ink:#ffe7a0;
+  --ok:#4fcf92; --ok-soft:#12291f; --bad:#ff7a70; --bad-soft:#331816;
+  --console:#080c18; --console-ink:#dfe6f7; --console-dim:#7d89aa; --console-line:#1e2742;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+code{font-family:var(--f-mono);font-size:.9em;background:var(--sunk);padding:.1em .35em;border-radius:5px}
+button{font:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:20px 18px}
+.brand{display:flex;align-items:baseline;gap:10px;flex:1 1 auto;min-width:0}
+.brand h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+.brand h1 span{color:var(--accent)}
+.brand p{margin:0;color:var(--muted);font-size:.92rem}
+.overall{display:flex;align-items:center;gap:10px;font-size:.9rem;color:var(--muted)}
+.bar{width:150px;height:10px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sun);border-radius:99px;transition:width .4s}
+.overall b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* shell */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;align-items:start}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:flex;flex-direction:column;gap:6px}
+.rail .lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 4px 4px;font-weight:700}
+.mod-btn{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;text-align:left;background:transparent;border:1px solid transparent;color:var(--ink);padding:9px 10px;border-radius:var(--r)}
+.mod-btn:hover{background:var(--surface);border-color:var(--line)}
+.mod-btn.on{background:var(--surface);border-color:var(--accent)}
+.mod-btn .n{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.mod-btn .n svg{width:24px;height:24px}
+.mod-btn.on .n svg [data-hl]{stroke:var(--accent-ink)}
+.mod-btn.on .n{background:var(--accent);color:var(--accent-ink)}
+.mod-btn .t{font-size:.95rem;line-height:1.25;min-width:0}
+.mod-btn .t small{display:block;color:var(--muted);font-size:.78rem}
+.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--line)}
+.dot.half{border-color:var(--sun);background:linear-gradient(90deg,var(--sun) 50%,transparent 50%)}
+.dot.done{border-color:var(--ok);background:var(--ok)}
+.rail .note{font-size:.8rem;color:var(--muted);margin:14px 4px 0;line-height:1.45}
+
+/* lesson */
+.lesson{display:flex;flex-direction:column;gap:22px;min-width:0}
+.head{display:flex;flex-direction:column;gap:6px;padding-block:4px 2px}
+.eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:700}
+.head h2{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;letter-spacing:-.02em}
+.head p{margin:0;color:var(--muted);max-width:62ch}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.block>h3{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.tag{font-family:var(--f-body);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.tag.sun{background:var(--sun-soft);color:var(--sun-ink)}
+.prose{max-width:66ch}
+.prose p{margin:0 0 .7em}
+.prose ul{margin:0 0 .7em;padding-left:1.2em}
+.prose li{margin:.2em 0}
+.key{background:var(--sun-soft);color:var(--sun-ink);border-radius:var(--r);padding:12px 14px;font-size:.95rem;max-width:66ch}
+.key b{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+
+/* editor */
+.ide{border-radius:12px;overflow:hidden;background:var(--console);border:1px solid var(--console-line);min-width:0}
+.ide-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid var(--console-line)}
+.ide-bar .file{font-family:var(--f-mono);font-size:.8rem;color:var(--console-dim);flex:1 1 auto}
+.btn{border:0;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.92rem;display:inline-flex;align-items:center;gap:6px}
+.btn-run{background:var(--sun);color:#2a1f00}
+.btn-run:hover{filter:brightness(1.06)}
+.btn-ghost{background:transparent;color:var(--console-dim);border:1px solid var(--console-line)}
+.btn-ghost:hover{color:var(--console-ink)}
+.btn[disabled]{opacity:.55;cursor:wait}
+.code{display:grid;grid-template-columns:auto minmax(0,1fr);}
+.gutter{font-family:var(--f-mono);font-size:.9rem;line-height:1.6;color:var(--console-dim);text-align:right;padding:12px 8px 12px 12px;user-select:none;white-space:pre;opacity:.7}
+.code textarea{width:100%;resize:vertical;border:0;background:transparent;color:var(--console-ink);font-family:var(--f-mono);font-size:.9rem;line-height:1.6;padding:12px 12px 12px 6px;tab-size:4;white-space:pre;overflow-x:auto;min-height:5em}
+.code textarea:focus{outline:none}
+.inputs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--console-line);font-size:.82rem;color:var(--console-dim)}
+.inputs input{flex:1 1 160px;min-width:0;background:transparent;border:1px solid var(--console-line);border-radius:6px;color:var(--console-ink);font-family:var(--f-mono);font-size:.85rem;padding:5px 8px}
+.out{border-top:1px solid var(--console-line);padding:10px 12px 12px;font-family:var(--f-mono);font-size:.88rem;color:var(--console-ink);min-height:2.6em}
+.out .lbl{font-family:var(--f-body);font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--console-dim);margin-bottom:4px}
+.out pre{margin:0;white-space:pre-wrap;word-break:break-word;font:inherit}
+.out .empty{color:var(--console-dim);font-family:var(--f-body);font-style:italic}
+.err{margin-top:8px;border-left:3px solid #ff7a70;padding:6px 10px;background:rgba(255,122,112,.1);border-radius:0 6px 6px 0;font-family:var(--f-body);font-size:.9rem;color:var(--console-ink)}
+.err b{color:#ff9a92}
+.err small{display:block;font-family:var(--f-mono);color:var(--console-dim);font-size:.78rem;margin-top:4px}
+
+/* task + feedback */
+.task{display:flex;flex-direction:column;gap:6px}
+.task p{margin:0;max-width:66ch}
+.expect{font-family:var(--f-mono);font-size:.85rem;background:var(--sunk);border-radius:8px;padding:8px 12px;white-space:pre;overflow-x:auto;max-width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn-check{background:var(--accent);color:var(--accent-ink)}
+.btn-soft{background:var(--sunk);color:var(--ink)}
+.fb{border-radius:var(--r);padding:12px 14px;font-size:.95rem}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.bad{background:var(--bad-soft);color:var(--bad)}
+.fb.info{background:var(--sun-soft);color:var(--sun-ink)}
+.fb b{display:block}
+.fb .diff{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin-top:6px;font-family:var(--f-mono);font-size:.82rem;color:var(--ink)}
+.fb .diff span:nth-child(odd){color:var(--muted);font-family:var(--f-body)}
+.fb pre{margin:6px 0 0;font-family:var(--f-mono);font-size:.85rem;color:var(--ink);white-space:pre-wrap}
+
+/* quiz */
+.q{display:flex;flex-direction:column;gap:8px;padding-block:6px}
+.q+.q{border-top:1px dashed var(--line);padding-top:16px}
+.q .qt{font-weight:700}
+.q pre{margin:0;font-family:var(--f-mono);font-size:.86rem;background:var(--sunk);border-radius:8px;padding:8px 12px;overflow-x:auto}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.opt{text-align:left;background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+.opt:hover{border-color:var(--accent)}
+.opt .k{font-family:var(--f-mono);font-weight:600;color:var(--muted)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.why{font-size:.92rem;color:var(--muted)}
+.score{font-size:.9rem;color:var(--muted)}
+
+/* visuals */
+.vis{background:var(--sunk);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.vis .cap{font-size:.88rem;color:var(--muted);margin:0}
+.flow1{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:center}
+.mini{background:var(--console);color:var(--console-ink);border-radius:8px;padding:10px 12px;font-family:var(--f-mono);font-size:.82rem;white-space:pre;overflow-x:auto}
+.mini .c{color:var(--console-dim)}
+.arrow{font-family:var(--f-display);font-weight:800;color:var(--accent);font-size:1.4rem;text-align:center}
+.boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.vbox{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.vbox .nm{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.vbox .val{font-family:var(--f-mono);font-size:1.15rem;font-weight:600;overflow-wrap:anywhere}
+.vbox .ty{align-self:flex-start;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-family:var(--f-mono)}
+.optable{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.optable th,.optable td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+.optable th{font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.optable td:first-child,.optable td:nth-child(3),.optable td:nth-child(4){font-family:var(--f-mono)}
+.scroll-x{overflow-x:auto;max-width:100%}
+.slider{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.slider input{flex:1 1 200px;accent-color:var(--accent)}
+.slider output{font-family:var(--f-mono);font-weight:600;font-size:1.2rem;min-width:3ch;font-variant-numeric:tabular-nums}
+.ifsvg{width:100%;height:auto;max-width:560px;display:block}
+.step{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.step .mini .hl{background:rgba(243,184,11,.25);border-radius:3px}
+.iter{display:flex;gap:6px;flex-wrap:wrap}
+.iter span{font-family:var(--f-mono);width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:var(--surface);border:1.5px solid var(--line);font-weight:600}
+.iter span.now{background:var(--sun);border-color:var(--sun);color:#2a1f00}
+.iter span.past{color:var(--muted)}
+.cells{display:flex;gap:8px;flex-wrap:wrap}
+.cell{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cell .v{background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-family:var(--f-mono);font-weight:600;min-width:70px;text-align:center}
+.cell .v.new{border-color:var(--sun);background:var(--sun-soft)}
+.cell .v.pick{border-color:var(--accent);background:var(--accent-soft)}
+.cell .i{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+
+/* tanya AI */
+.ai{border:1.5px solid var(--accent);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--accent-soft)}
+.ai-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ai-head b{font-family:var(--f-display);font-size:1.05rem}
+.ai-head small{color:var(--muted);font-size:.82rem;flex:1 1 220px}
+.ai-ask{display:flex;gap:8px;flex-wrap:wrap}
+.ai-ask input{flex:1 1 220px;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 12px;font:inherit;font-size:.95rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:99px;padding:5px 12px;font-size:.85rem;font-weight:700}
+.chip:hover{background:var(--accent);color:var(--accent-ink)}
+.chip[disabled]{opacity:.5;cursor:wait}
+.ai-ans{background:var(--surface);border-radius:10px;padding:12px 14px;font-size:.95rem;line-height:1.6;max-width:100%;overflow-wrap:anywhere}
+.ai-ans p{margin:0 0 .6em}.ai-ans p:last-child{margin:0}
+.ai-ans pre{background:var(--console);color:var(--console-ink);border-radius:8px;padding:8px 12px;font-family:var(--f-mono);font-size:.85rem;overflow-x:auto;white-space:pre;margin:.4em 0}
+.ai-ans .think{color:var(--muted);font-style:italic}
+.ai-note{font-size:.8rem;color:var(--muted)}
+
+.logo{width:40px;height:40px;flex:none;align-self:center}
+.brand{align-items:center}
+.brand .wm{display:flex;flex-direction:column}
+.head-row{display:flex;gap:16px;align-items:center}
+.head-ic{width:64px;height:64px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.head-ic svg{width:42px;height:42px}
+.fb.kodi{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:center}
+.fb.kodi svg{width:64px;height:70px}
+.done-card{flex-direction:row!important;align-items:center;gap:20px!important}
+.done-card svg{width:110px;height:120px;flex:none}
+.done-card .tx{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ai-head svg{width:40px;height:44px;flex:none}
+@media (max-width:560px){.done-card{flex-direction:column!important;align-items:flex-start}}
+.nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.nav .btn{padding:11px 18px}
+.done-card{background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:8px}
+.done-card h3{font-size:1.4rem}
+.done-card p{margin:0;max-width:62ch}
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);font-size:.82rem;color:var(--muted)}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:18px}
+  .rail{position:static;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .rail .lbl,.rail .note{grid-column:1/-1}
+  .rail .note{display:none}
+  .mod-btn{grid-template-columns:auto 1fr;padding:7px 8px;gap:8px;background:var(--surface);border-color:var(--line)}
+  .mod-btn .n{width:28px;height:28px}
+  .mod-btn .n svg{width:20px;height:20px}
+  .mod-btn .t small,.mod-btn .dot{display:none}
+  .mod-btn .t{font-size:.8rem}
+  .block{padding:16px}
+  .flow1,.step{grid-template-columns:minmax(0,1fr)}
+  .arrow{transform:rotate(90deg)}
+  .bar{width:100px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="4" width="56" height="46" rx="14" fill="var(--accent)"/><path d="M14 46 L14 60 L28 48 Z" fill="var(--accent)"/><path d="M19 17 L29 26 L19 35" fill="none" stroke="var(--accent-ink)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="33" y="31" width="15" height="5" rx="2.5" fill="#F3B80B"/></svg><div class="wm"><h1>Code<span>Learn</span></h1><p>Dasar Python untuk pemula</p></div></div>
+    <div class="overall" aria-live="polite"><span>Progres</span><div class="bar"><i id="ovbar" style="width:0%"></i></div><b id="ovtxt">0/6</b></div>
+  </header>
+  <div class="shell">
+    <nav class="rail" id="rail" aria-label="Daftar modul"></nav>
+    <main class="lesson" id="lesson"></main>
+  </div>
+  <footer>CodeLearn · Prototipe v1 · Proyek Literasi Generative AI. Materi, contoh kode, soal, dan feedback disusun dengan bantuan Gen AI lalu diperiksa oleh tim. Kode Python dijalankan langsung di browser.</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script>
+/* ---------------- content ---------------- */
+/* ---------------- brand: ikon modul & maskot Kodi ---------------- */
+const SW='stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" data-hl';
+const Y='stroke="#F3B80B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"';
+const ICONS = [
+ `<svg viewBox="0 0 48 48"><rect x="6" y="10" width="36" height="28" rx="5" fill="none" ${SW}/><path d="M13 20 L18 24 L13 28" fill="none" ${SW}/><path d="M22 29 L33 29" ${Y}/></svg>`,
+ `<svg viewBox="0 0 48 48"><rect x="8" y="18" width="32" height="22" rx="5" fill="none" ${SW}/><path d="M14 18 L14 10 L28 10 L28 18" fill="none" ${SW}/><path d="M16 29 L32 29" ${Y}/></svg>`,
+ `<svg viewBox="0 0 48 48"><path d="M4 24 L24 24" ${Y}/><path d="M18 18 L24 24 L18 30" fill="none" ${Y}/><rect x="28" y="10" width="15" height="28" rx="5" fill="none" ${SW}/></svg>`,
+ `<svg viewBox="0 0 48 48"><path d="M24 6 L24 20" ${SW}/><path d="M24 20 L12 32 L12 42" fill="none" ${SW}/><path d="M24 20 L36 32 L36 42" fill="none" ${Y}/><circle cx="24" cy="20" r="4" fill="currentColor"/></svg>`,
+ `<svg viewBox="0 0 48 48"><path d="M38 26 A14 14 0 1 1 34 14" fill="none" ${SW}/><path d="M36 5 L35 15 L25 14" fill="none" ${SW}/><circle cx="24" cy="26" r="4" fill="#F3B80B"/></svg>`,
+ `<svg viewBox="0 0 48 48"><rect x="5" y="14" width="13" height="16" rx="3" fill="none" ${SW}/><rect x="18" y="14" width="13" height="16" rx="3" fill="#F3B80B" ${SW}/><rect x="31" y="14" width="13" height="16" rx="3" fill="none" ${SW}/><circle cx="11.5" cy="38" r="2.2" fill="currentColor"/><circle cx="24.5" cy="38" r="2.2" fill="currentColor"/><circle cx="37.5" cy="38" r="2.2" fill="currentColor"/></svg>`
+];
+function kodi(mood){
+  const body='<path d="M70 236 C 24 236 22 186 72 180 C 150 172 196 158 176 118 C 166 98 140 104 132 92" fill="none" stroke="#F3B80B" stroke-width="44" stroke-linecap="round"/><path d="M70 236 C 24 236 22 186 72 180 C 150 172 196 158 176 118 C 166 98 140 104 132 92" fill="none" stroke="#D99A00" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 28"/><ellipse cx="128" cy="74" rx="56" ry="48" fill="#F3B80B"/><ellipse cx="90" cy="94" rx="8" ry="5" fill="#F29A8E"/><ellipse cx="166" cy="94" rx="8" ry="5" fill="#F29A8E"/>';
+  const glasses='<circle cx="108" cy="70" r="17" fill="#FFFFFF" stroke="#141C33" stroke-width="5"/><circle cx="148" cy="70" r="17" fill="#FFFFFF" stroke="#141C33" stroke-width="5"/><path d="M125 70 L131 70" stroke="#141C33" stroke-width="5" stroke-linecap="round"/>';
+  let face, extra="";
+  if(mood==="senang"){
+    extra='<path d="M58 34 L61 43 L70 46 L61 49 L58 58 L55 49 L46 46 L55 43 Z" fill="#2F58CD"/><path d="M204 22 L206 29 L213 31 L206 33 L204 40 L202 33 L195 31 L202 29 Z" fill="#2F58CD"/>';
+    face='<path d="M100 75 Q108 64 116 75" fill="none" stroke="#141C33" stroke-width="4.5" stroke-linecap="round"/><path d="M140 75 Q148 64 156 75" fill="none" stroke="#141C33" stroke-width="4.5" stroke-linecap="round"/><path d="M113 95 Q128 118 143 95 Z" fill="#141C33" stroke="#141C33" stroke-width="3" stroke-linejoin="round"/><path d="M121 105 Q128 100 135 105 Q128 112 121 105 Z" fill="#E0503F"/>';
+  } else if(mood==="bingung"){
+    extra='<circle cx="206" cy="36" r="24" fill="#2F58CD"/><path d="M198 30 Q198 20 206 20 Q215 20 215 29 Q215 35 207 39 L207 44" fill="none" stroke="#F2F4F9" stroke-width="4.5" stroke-linecap="round"/><circle cx="207" cy="52" r="3" fill="#F2F4F9"/>';
+    face='<path d="M94 44 L118 50" stroke="#141C33" stroke-width="4.5" stroke-linecap="round"/><path d="M140 50 L162 42" stroke="#141C33" stroke-width="4.5" stroke-linecap="round"/><circle cx="104" cy="65" r="7" fill="#141C33"/><circle cx="144" cy="65" r="7" fill="#141C33"/><path d="M114 101 Q121 95 128 101 Q135 107 142 101" fill="none" stroke="#141C33" stroke-width="4.5" stroke-linecap="round"/>';
+  } else {
+    face='<circle cx="110" cy="72" r="7" fill="#141C33"/><circle cx="150" cy="72" r="7" fill="#141C33"/><circle cx="112" cy="69" r="2" fill="#FFFFFF"/><circle cx="152" cy="69" r="2" fill="#FFFFFF"/><path d="M115 98 Q128 108 141 98" fill="none" stroke="#141C33" stroke-width="4.5" stroke-linecap="round"/>';
+  }
+  const glassesNow = mood==="bingung" ? glasses.replace(/<circle cx="108"[^>]*\/>/,'$&') : glasses;
+  const order = mood==="bingung" ? extra+body+face.split('<circle')[0]+glassesNow+'<circle'+face.split('<circle').slice(1).join('<circle') : extra+body+glasses+face;
+  return `<svg viewBox="0 0 240 260" role="img" aria-label="Kodi ${mood}">${order}</svg>`;
+}
+
+const MODULES = [
+{
+  id:"m1", short:"Halo", title:"Halo, Python!", sub:"print() dan komentar",
+  intro:"Program pertamamu: menyuruh komputer menampilkan sesuatu ke layar.",
+  materi:`<p>Python membaca perintah <b>baris demi baris, dari atas ke bawah</b>. Perintah paling dasar adalah <code>print()</code>, yang menampilkan isi di dalam kurung ke layar.</p>
+  <ul><li>Teks harus diapit tanda kutip: <code>"Halo"</code> atau <code>'Halo'</code>.</li>
+  <li>Angka ditulis tanpa tanda kutip: <code>print(2026)</code>.</li>
+  <li>Baris yang diawali <code>#</code> adalah <b>komentar</b>. Python melewatinya, jadi komentar dipakai untuk catatan.</li></ul>`,
+  key:"Python membedakan huruf besar dan kecil. <code>print</code> benar, <code>Print</code> akan error.",
+  visual:"io",
+  contoh:`# Program pertama
+print("Halo, dunia!")
+print("Belajar Python itu seru")
+print(2026)
+print("2 + 3 =", 2 + 3)`,
+  contohInputs:null,
+  ex:{
+    soal:"Tulis program yang mencetak dua baris berikut, persis sama:",
+    starter:`# Tulis kodemu di bawah ini\n`,
+    tests:[{inputs:[],expected:"Halo, CodeLearn!\nSaya siap belajar Python"}],
+    must:["print"],
+    hint:"Gunakan dua perintah print(), satu untuk setiap baris. Jangan lupa tanda kutip dan tanda seru.",
+    solusi:`print("Halo, CodeLearn!")\nprint("Saya siap belajar Python")`
+  },
+  quiz:[
+    {q:"Apa output dari kode ini?", code:`print("5 + 3")`, opts:["8","5 + 3","\"5 + 3\"","Error"], a:1, why:"Isinya diapit tanda kutip, jadi Python menganggapnya teks dan mencetaknya apa adanya, tanpa tanda kutip."},
+    {q:"Penulisan mana yang benar?", opts:["print(Halo)","print(\"Halo\")","Print(\"Halo\")","print \"Halo\""], a:1, why:"Teks butuh tanda kutip, print ditulis huruf kecil, dan di Python 3 wajib memakai kurung."},
+    {q:"Apa fungsi tanda # dalam Python?", opts:["Mencetak angka","Menandai komentar","Membuat variabel","Mengakhiri program"], a:1, why:"Baris yang diawali # adalah komentar dan tidak dijalankan."}
+  ]
+},
+{
+  id:"m2", short:"Variabel", title:"Variabel dan Tipe Data", sub:"Menyimpan nilai",
+  intro:"Variabel adalah kotak berlabel untuk menyimpan nilai yang akan dipakai lagi.",
+  materi:`<p>Untuk membuat variabel, tulis <b>nama = nilai</b>. Contoh: <code>umur = 19</code>. Setelah itu, nama <code>umur</code> bisa dipakai di mana saja dalam program.</p>
+  <p>Setiap nilai punya <b>tipe data</b>:</p>
+  <ul><li><code>str</code>: teks, misalnya <code>"Rina"</code></li>
+  <li><code>int</code>: bilangan bulat, misalnya <code>19</code></li>
+  <li><code>float</code>: bilangan desimal, misalnya <code>1.62</code> (pakai titik, bukan koma)</li>
+  <li><code>bool</code>: benar/salah, yaitu <code>True</code> atau <code>False</code></li></ul>
+  <p>Aturan nama variabel: tanpa spasi (pakai <code>_</code>), tidak diawali angka, dan huruf besar/kecil dianggap berbeda.</p>`,
+  key:"Tanda <code>=</code> artinya <b>simpan nilai ke variabel</b>, bukan \"sama dengan\" seperti di matematika.",
+  visual:"boxes",
+  contoh:`nama = "Rina"
+umur = 19
+tinggi = 1.62
+mahasiswa = True
+
+print(nama, umur)
+print(type(tinggi))
+
+umur = umur + 1   # nilai lama diganti
+print("Tahun depan umur", nama, "menjadi", umur)`,
+  contohInputs:null,
+  ex:{
+    soal:"Buat variabel <code>nama</code> berisi \"Rina\" dan <code>umur</code> berisi 19. Lalu cetak kalimat di bawah <b>menggunakan kedua variabel itu</b>:",
+    starter:`# 1. Buat variabel nama dan umur\n\n# 2. Cetak kalimatnya memakai variabel\n`,
+    tests:[{inputs:[],expected:"Rina berumur 19 tahun"}],
+    must:["nama","umur"],
+    hint:"print() bisa menerima beberapa nilai dipisah koma, dan otomatis memberi spasi di antaranya. Contoh: print(nama, \"berumur\", ...)",
+    solusi:`nama = "Rina"\numur = 19\nprint(nama, "berumur", umur, "tahun")`
+  },
+  quiz:[
+    {q:"Apa tipe data dari nilai 3.14?", opts:["int","str","float","bool"], a:2, why:"Bilangan desimal bertipe float."},
+    {q:"Nama variabel mana yang valid?", opts:["2nama","nama siswa","nama_siswa","nama-siswa"], a:2, why:"Nama variabel tidak boleh diawali angka, tidak boleh berisi spasi, dan tanda - dibaca sebagai pengurangan. Gunakan garis bawah."},
+    {q:"Apa output program ini?", code:`x = 5\nx = x + 2\nprint(x)`, opts:["5","7","x + 2","52"], a:1, why:"x berisi 5, lalu diganti dengan 5 + 2 = 7."}
+  ]
+},
+{
+  id:"m3", short:"Input", title:"Input dan Operator", sub:"Berhitung dengan data pengguna",
+  intro:"Program menjadi interaktif saat bisa menerima data dari pengguna lalu mengolahnya.",
+  materi:`<p><code>input()</code> meminta pengguna mengetik sesuatu. Hasilnya <b>selalu berupa teks (str)</b>, walaupun yang diketik angka.</p>
+  <p>Agar bisa dihitung, ubah dulu dengan <code>int()</code> untuk bilangan bulat atau <code>float()</code> untuk desimal:</p>
+  <p><code>umur = int(input("Umur: "))</code></p>
+  <p>Operator aritmetika di Python ada di tabel visual di bawah. Yang sering membingungkan pemula adalah <code>//</code> (pembagian dibulatkan ke bawah) dan <code>%</code> (sisa bagi).</p>`,
+  key:"Di halaman ini, isi untuk <code>input()</code> diketik di kotak <b>Input</b> di bawah editor. Pisahkan beberapa input dengan koma.",
+  visual:"ops",
+  contoh:`nama = input("Siapa namamu? ")
+print("Halo,", nama)
+
+a = 17
+b = 5
+print(a + b, a - b, a * b)
+print(a / b, a // b, a % b)
+print(2 ** 3)`,
+  contohInputs:"Budi",
+  ex:{
+    soal:"Buat program luas persegi panjang. Baca <b>panjang</b> lalu <b>lebar</b> dengan <code>input()</code>, ubah ke int, lalu cetak luasnya. Untuk input 8 dan 5, output-nya:",
+    starter:`panjang = input("Panjang: ")\nlebar = input("Lebar: ")\n\n# hitung luas lalu cetak\n`,
+    tests:[{inputs:["8","5"],expected:"Luas: 40"},{inputs:["3","7"],expected:"Luas: 21"}],
+    showInputs:"8, 5",
+    must:["input","int"],
+    hint:"Hasil input() masih berupa teks. Bungkus dengan int(), misalnya panjang = int(input(\"Panjang: \")). Lalu cetak dengan print(\"Luas:\", luas).",
+    solusi:`panjang = int(input("Panjang: "))\nlebar = int(input("Lebar: "))\nluas = panjang * lebar\nprint("Luas:", luas)`
+  },
+  quiz:[
+    {q:"Berapa hasil dari 17 // 5?", opts:["3.4","3","2","4"], a:1, why:"// membagi lalu membulatkan ke bawah: 17 / 5 = 3.4, dibulatkan menjadi 3."},
+    {q:"Berapa hasil dari 17 % 5?", opts:["3","2","3.4","0"], a:1, why:"% menghasilkan sisa bagi. 17 = 5 × 3 + 2, jadi sisanya 2."},
+    {q:"Pengguna mengetik 19. Apa yang terjadi?", code:`umur = input("Umur: ")\nprint(umur + 1)`, opts:["Tercetak 20","Tercetak 191","Error, karena umur berupa teks","Tercetak 19"], a:2, why:"input() menghasilkan teks \"19\". Teks tidak bisa dijumlahkan dengan angka, sehingga muncul TypeError. Solusinya pakai int()."}
+  ]
+},
+{
+  id:"m4", short:"If-else", title:"Percabangan", sub:"if, elif, else",
+  intro:"Program bisa mengambil keputusan: menjalankan perintah berbeda tergantung kondisi.",
+  materi:`<p>Struktur percabangan:</p>
+  <ul><li><code>if kondisi:</code> dijalankan jika kondisi benar</li>
+  <li><code>elif kondisi:</code> dicek jika kondisi sebelumnya salah (boleh lebih dari satu)</li>
+  <li><code>else:</code> dijalankan jika semua kondisi di atasnya salah</li></ul>
+  <p>Operator pembanding: <code>==</code> sama dengan, <code>!=</code> tidak sama, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>.</p>
+  <p>Perhatikan dua hal wajib: <b>titik dua (:)</b> di akhir baris if/elif/else, dan baris di bawahnya <b>menjorok 4 spasi</b> (indentasi).</p>`,
+  key:"<code>=</code> untuk menyimpan nilai, <code>==</code> untuk membandingkan. Tertukar keduanya adalah kesalahan paling umum.",
+  visual:"ifflow",
+  contoh:`nilai = int(input("Masukkan nilai: "))
+
+if nilai >= 85:
+    print("Grade A")
+elif nilai >= 70:
+    print("Grade B")
+else:
+    print("Perlu belajar lagi")`,
+  contohInputs:"78",
+  ex:{
+    soal:"Baca sebuah nilai dengan <code>input()</code>. Jika nilai 70 atau lebih, cetak <b>Lulus</b>. Selain itu, cetak <b>Remedial</b>. Program akan diuji dengan nilai 75, 60, dan 70. Contoh untuk input 75:",
+    starter:`nilai = int(input("Nilai: "))\n\n# tulis if-else di sini\n`,
+    tests:[{inputs:["75"],expected:"Lulus"},{inputs:["60"],expected:"Remedial"},{inputs:["70"],expected:"Lulus"}],
+    showInputs:"75",
+    must:["if","else"],
+    hint:"Gunakan nilai >= 70 sebagai kondisi. Jangan lupa titik dua dan 4 spasi di awal baris print.",
+    solusi:`nilai = int(input("Nilai: "))\nif nilai >= 70:\n    print("Lulus")\nelse:\n    print("Remedial")`
+  },
+  quiz:[
+    {q:"Tanda apa yang dipakai untuk mengecek apakah dua nilai sama?", opts:["=","==","!=","=>"], a:1, why:"== membandingkan, sedangkan = menyimpan nilai."},
+    {q:"Apa output program ini?", code:`x = 10\nif x > 5:\n    print("A")\nelse:\n    print("B")`, opts:["A","B","A dan B","Error"], a:0, why:"10 > 5 bernilai benar, jadi blok if yang dijalankan."},
+    {q:"Apa yang wajib ditulis setelah if kondisi?", opts:["Titik koma (;)","Kurung kurawal { }","Titik dua (:) lalu baris berikutnya menjorok","Kata then"], a:2, why:"Python memakai titik dua dan indentasi untuk menandai blok kode, bukan kurung kurawal."}
+  ]
+},
+{
+  id:"m5", short:"Loop", title:"Perulangan", sub:"for dan while",
+  intro:"Perulangan menjalankan perintah yang sama berkali-kali tanpa menulisnya berulang.",
+  materi:`<p><b>for</b> dipakai jika jumlah perulangan sudah jelas. Biasanya bersama <code>range()</code>:</p>
+  <ul><li><code>range(5)</code> menghasilkan 0, 1, 2, 3, 4</li>
+  <li><code>range(1, 6)</code> menghasilkan 1 sampai 5. Angka akhir <b>tidak ikut</b>.</li></ul>
+  <p><b>while</b> dipakai jika perulangan berjalan selama suatu kondisi masih benar. Pastikan ada perintah yang mengubah kondisinya, kalau tidak perulangan tidak akan berhenti.</p>`,
+  key:"Seperti if, baris yang diulang harus menjorok 4 spasi di bawah baris <code>for</code> atau <code>while</code>.",
+  visual:"loop",
+  contoh:`for i in range(1, 4):
+    print("Putaran", i)
+
+hitung = 3
+while hitung > 0:
+    print("Hitung mundur:", hitung)
+    hitung = hitung - 1
+print("Selesai!")`,
+  contohInputs:null,
+  ex:{
+    soal:"Gunakan perulangan <code>for</code> untuk mencetak angka 1 sampai 5, satu angka per baris:",
+    starter:`# gunakan for dan range()\n`,
+    tests:[{inputs:[],expected:"1\n2\n3\n4\n5"}],
+    must:["for"],
+    hint:"range(1, 6) menghasilkan 1 sampai 5. Di dalam perulangan, cukup print(i).",
+    solusi:`for i in range(1, 6):\n    print(i)`
+  },
+  quiz:[
+    {q:"range(1, 5) menghasilkan angka apa saja?", opts:["1, 2, 3, 4, 5","1, 2, 3, 4","0, 1, 2, 3, 4","2, 3, 4, 5"], a:1, why:"Angka akhir pada range tidak ikut, jadi berhenti di 4."},
+    {q:"Berapa kali print dijalankan?", code:`for i in range(3):\n    print("Hai")`, opts:["2 kali","3 kali","4 kali","1 kali"], a:1, why:"range(3) menghasilkan 0, 1, 2, yaitu tiga putaran."},
+    {q:"Apa yang terjadi jika variabel kondisi pada while tidak pernah diubah?", opts:["Program langsung berhenti","Perulangan berjalan sekali","Perulangan tidak pernah berhenti (infinite loop)","Python otomatis memperbaikinya"], a:2, why:"Kondisinya terus benar, jadi perulangan berjalan tanpa akhir. Di halaman ini program akan dihentikan otomatis setelah beberapa detik."}
+  ]
+},
+{
+  id:"m6", short:"List", title:"List", sub:"Kumpulan data",
+  intro:"List menyimpan banyak nilai dalam satu variabel, misalnya daftar nilai satu kelas.",
+  materi:`<p>List ditulis dengan kurung siku: <code>buah = ["apel", "mangga", "jeruk"]</code></p>
+  <ul><li>Setiap item punya <b>index</b> (nomor urut) yang <b>dimulai dari 0</b>. <code>buah[0]</code> adalah "apel".</li>
+  <li>Index negatif menghitung dari belakang: <code>buah[-1]</code> adalah item terakhir.</li>
+  <li><code>buah.append("pisang")</code> menambah item di akhir list.</li>
+  <li><code>len(buah)</code> menghitung jumlah item, <code>sum(angka)</code> menjumlahkan isi list angka.</li></ul>
+  <p>List sangat cocok dipadukan dengan <code>for</code> untuk memproses setiap item satu per satu.</p>`,
+  key:"Index dimulai dari 0. List berisi 3 item punya index 0, 1, dan 2. Mengakses index 3 akan menimbulkan IndexError.",
+  visual:"list",
+  contoh:`buah = ["apel", "mangga", "jeruk"]
+print(buah[0])
+print(buah[-1])
+
+buah.append("pisang")
+print("Jumlah:", len(buah))
+
+for b in buah:
+    print("Saya suka", b)`,
+  contohInputs:null,
+  ex:{
+    soal:"Buat list <code>nilai</code> berisi 80, 75, dan 90. Tambahkan 85 dengan <code>append</code>. Lalu cetak jumlah data dan rata-ratanya:",
+    starter:`nilai = [80, 75, 90]\n\n# tambahkan 85, lalu cetak jumlah data dan rata-rata\n`,
+    tests:[{inputs:[],expected:"Jumlah data: 4\nRata-rata: 82.5"}],
+    must:["append"],
+    hint:"Gunakan nilai.append(85). Rata-rata = sum(nilai) / len(nilai).",
+    solusi:`nilai = [80, 75, 90]\nnilai.append(85)\nprint("Jumlah data:", len(nilai))\nprint("Rata-rata:", sum(nilai) / len(nilai))`
+  },
+  quiz:[
+    {q:"Apa output program ini?", code:`buah = ["a", "b", "c"]\nprint(buah[1])`, opts:["a","b","c","Error"], a:1, why:"Index dimulai dari 0, jadi index 1 adalah item kedua."},
+    {q:"Method apa yang menambah item di akhir list?", opts:["add()","push()","append()","insert_end()"], a:2, why:"Di Python, item ditambahkan ke akhir list dengan append()."},
+    {q:"Berapa hasil len([3, 6, 9, 12])?", opts:["3","4","12","30"], a:1, why:"len() menghitung jumlah item. Ada empat item di list tersebut."}
+  ]
+}
+];
+
+const ERR_TIPS = {
+  SyntaxError:"Ada penulisan yang tidak sesuai aturan Python. Cek tanda kurung, tanda kutip, dan titik dua (:) di akhir baris if, elif, else, for, atau while.",
+  IndentationError:"Indentasi (spasi di awal baris) tidak rapi. Baris di dalam if, for, atau while harus menjorok 4 spasi, dan baris lain tidak boleh menjorok tanpa alasan.",
+  NameError:"Python tidak mengenal nama ini. Mungkin variabelnya belum dibuat, ada salah ketik, atau teks lupa diberi tanda kutip.",
+  TypeError:"Tipe data tidak cocok, misalnya menjumlahkan teks dengan angka. Gunakan int() untuk mengubah teks menjadi angka, atau str() untuk sebaliknya.",
+  ValueError:"Nilai tidak bisa diubah ke tipe yang diminta, misalnya int(\"abc\") atau int(\"\"). Periksa isi kotak Input.",
+  ZeroDivisionError:"Ada pembagian dengan nol. Pastikan pembaginya bukan 0.",
+  IndexError:"Index di luar jangkauan list. Ingat, index dimulai dari 0, jadi index terakhir adalah len(list) - 1.",
+  AttributeError:"Method ini tidak ada untuk tipe data tersebut. Cek ejaannya, misalnya append (bukan add).",
+  TimeoutError:"Program berjalan terlalu lama lalu dihentikan. Kemungkinan perulangannya tidak pernah berhenti.",
+  TimeLimitError:"Program berjalan terlalu lama lalu dihentikan. Kemungkinan perulangannya tidak pernah berhenti."
+};
+
+/* ---------------- state ---------------- */
+const KEY = "codelearn-v1";
+let state = {cur:0, prog:{}};
+try{ const s = JSON.parse(localStorage.getItem(KEY)||"null"); if(s && typeof s==="object") state = Object.assign(state,s); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function prog(id){ return state.prog[id] || (state.prog[id] = {ex:false, quiz:{}}); }
+function quizDone(m){ const p=prog(m.id); return m.quiz.every((_,i)=>p.quiz[i]==="ok"||p.quiz[i]==="ok1"); }
+function modStatus(m){ const p=prog(m.id); const d=(p.ex?1:0)+(quizDone(m)?1:0); return d===2?"done":(d||Object.keys(p.quiz).length?"half":""); }
+
+/* ---------------- python runner ---------------- */
+function builtinRead(x){
+  if(typeof Sk==="undefined" || !Sk.builtinFiles || Sk.builtinFiles.files[x]===undefined) throw "File not found: '"+x+"'";
+  return Sk.builtinFiles.files[x];
+}
+async function runPython(code, inputs){
+  if(typeof Sk==="undefined") return {ok:false, out:"", shown:"", err:null, engine:false};
+  let out="", shown="", starved=false;
+  const q=[...inputs];
+  Sk.configure({
+    output:t=>{out+=t; shown+=t;},
+    read:builtinRead,
+    __future__:Sk.python3,
+    inputfunTakesPrompt:true,
+    inputfun:p=>{ let v=""; if(q.length) v=q.shift(); else starved=true; shown+=(p||"")+v+"\n"; return v; },
+    execLimit:3000, yieldLimit:100, killableWhile:true, killableFor:true
+  });
+  Sk.execLimit = 3000;
+  try{
+    await Sk.misceval.asyncToPromise(()=>Sk.importMainWithBody("<stdin>", false, code, true));
+    return {ok:true, out, shown, starved};
+  }catch(e){
+    return {ok:false, out, shown, err:e, starved, engine:true};
+  }
+}
+function describeError(e){
+  let name = (e && (e.tp$name || (e.constructor && e.constructor.tp$name))) || "Error";
+  let raw = String(e);
+  if(/time limit|run time/i.test(raw)) name="TimeoutError";
+  let line = null;
+  try{ if(e.traceback && e.traceback.length) line = e.traceback[0].lineno; }catch(_){}
+  return {name, line, raw, tip: ERR_TIPS[name] || "Periksa kembali kodenya baris demi baris."};
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function parseInputs(s){ return (s||"").split(",").map(x=>x.trim()).filter(x=>x.length); }
+
+/* ---------------- editor component ---------------- */
+let edCount = 0;
+function makeEditor(host, {code, inputs, file}){
+  const id = "ed"+(++edCount);
+  host.innerHTML = `<div class="ide">
+    <div class="ide-bar"><span class="file">${esc(file||"main.py")}</span>
+      <button class="btn btn-ghost" data-act="reset" type="button">Reset</button>
+      <button class="btn btn-run" data-act="run" type="button">▶ Jalankan</button></div>
+    <div class="code"><div class="gutter" aria-hidden="true"></div>
+      <textarea id="${id}" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Editor kode Python"></textarea></div>
+    ${inputs!==null && inputs!==undefined ? `<label class="inputs" for="${id}-in">Input <input id="${id}-in" type="text" value="${esc(inputs)}" placeholder="pisahkan dengan koma, mis. 8, 5"></label>`:""}
+    <div class="out" aria-live="polite"><div class="lbl">Output</div><div class="body"><span class="empty">Tekan Jalankan (atau Ctrl+Enter) untuk melihat hasilnya.</span></div></div>
+  </div>`;
+  const ta = host.querySelector("textarea"), gut = host.querySelector(".gutter"), outBody = host.querySelector(".out .body");
+  const inEl = host.querySelector(".inputs input");
+  const runBtn = host.querySelector('[data-act="run"]');
+  ta.value = code;
+  const sync = ()=>{ const n = ta.value.split("\n").length; ta.rows = Math.max(4, n+1); gut.textContent = Array.from({length:Math.max(n,ta.rows)},(_,i)=>i<n?i+1:"").join("\n"); };
+  sync();
+  ta.addEventListener("input", sync);
+  ta.addEventListener("keydown", e=>{
+    if(e.key==="Tab" && !e.shiftKey){ e.preventDefault(); const s=ta.selectionStart, en=ta.selectionEnd; ta.setRangeText("    ", s, en, "end"); sync(); }
+    else if(e.key==="Enter" && (e.ctrlKey||e.metaKey)){ e.preventDefault(); run(); }
+    else if(e.key==="Enter"){ // keep indentation, add 4 after ':'
+      const s=ta.selectionStart; const lineStart=ta.value.lastIndexOf("\n", s-1)+1; const line=ta.value.slice(lineStart, s);
+      let ind=(line.match(/^ */)||[""])[0]; if(/:\s*$/.test(line)) ind+="    ";
+      e.preventDefault(); ta.setRangeText("\n"+ind, s, ta.selectionEnd, "end"); sync();
+    }
+  });
+  async function run(){
+    runBtn.disabled=true; runBtn.textContent="Menjalankan…";
+    const r = await runPython(ta.value, parseInputs(inEl?inEl.value:""));
+    runBtn.disabled=false; runBtn.textContent="▶ Jalankan";
+    showResult(outBody, r);
+  }
+  runBtn.addEventListener("click", run);
+  host.querySelector('[data-act="reset"]').addEventListener("click", ()=>{ ta.value=code; sync(); outBody.innerHTML='<span class="empty">Kode dikembalikan ke awal.</span>'; });
+  return {get code(){return ta.value}, set code(v){ta.value=v; sync();}, outBody, inEl};
+}
+function showResult(outBody, r){
+  if(r.engine===false){ outBody.innerHTML = `<div class="err"><b>Mesin Python belum termuat.</b> Periksa koneksi internet, lalu muat ulang halaman.</div>`; return; }
+  let html = r.shown ? `<pre>${esc(r.shown)}</pre>` : (r.ok?`<span class="empty">Program selesai tanpa output. Sudahkah kamu memakai print()?</span>`:"");
+  if(!r.ok){
+    const d = describeError(r.err);
+    html += `<div class="err"><b>${esc(d.name)}${d.line?` di baris ${d.line}`:""}</b>${esc(d.tip)}<small>${esc(d.raw)}</small></div>`;
+  }
+  if(r.starved) html += `<div class="err"><b>Input kurang.</b>Program meminta input lebih banyak dari yang ada di kotak Input. Tambahkan nilainya, pisahkan dengan koma.</div>`;
+  outBody.innerHTML = html;
+}
+
+/* ---------------- checking ---------------- */
+function norm(s){ const L = s.replace(/\r/g,"").split("\n").map(l=>l.replace(/\s+$/,"")); while(L.length && L[L.length-1]==="") L.pop(); return L; }
+function stripComments(code){ return code.split("\n").map(l=>l.replace(/#.*$/,"")).join("\n"); }
+async function checkExercise(m, code){
+  const clean = stripComments(code);
+  for(const t of m.ex.tests){
+    const r = await runPython(code, t.inputs);
+    if(r.engine===false) return {status:"engine"};
+    if(!r.ok) return {status:"error", r, t};
+    const got = norm(r.out), exp = norm(t.expected);
+    if(got.join("\n") !== exp.join("\n")){
+      const loose = a=>a.map(l=>l.toLowerCase().replace(/\s+/g," ").trim()).join("\n");
+      let i=0; while(i<Math.max(got.length,exp.length) && got[i]===exp[i]) i++;
+      return {status:"wrong", t, got, exp, line:i, near: loose(got)===loose(exp)};
+    }
+  }
+  const missing = m.ex.must.filter(w=>!new RegExp("\\b"+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b").test(clean));
+  if(missing.length) return {status:"must", missing};
+  return {status:"ok"};
+}
+
+/* ---------------- visuals ---------------- */
+function visual(type, el){
+  if(type==="io"){
+    el.innerHTML = `<div class="flow1"><div class="mini"><span class="c"># kode</span>
+print("Halo!")
+print(7 * 6)</div><div class="arrow" aria-hidden="true">→</div><div class="mini"><span class="c"># layar</span>
+Halo!
+42</div></div><p class="cap">Kode di kiri dijalankan dari atas ke bawah. Setiap print() menghasilkan satu baris di layar. Ekspresi seperti 7 * 6 dihitung dulu sebelum dicetak.</p>`;
+  }
+  if(type==="boxes"){
+    const items=[["nama",'"Rina"',"str"],["umur","19","int"],["tinggi","1.62","float"],["mahasiswa","True","bool"]];
+    el.innerHTML = `<div class="boxes">${items.map(([n,v,t])=>`<div class="vbox"><span class="nm">${n}</span><span class="val">${v}</span><span class="ty">${t}</span></div>`).join("")}</div>
+    <div class="row"><button class="btn btn-soft" type="button" id="vb-up">Jalankan: umur = umur + 1</button><button class="btn btn-soft" type="button" id="vb-reset">Ulangi</button></div>
+    <p class="cap">Setiap variabel seperti kotak berlabel. Saat diberi nilai baru, isi kotak diganti dan nilai lama hilang.</p>`;
+    const val = el.querySelectorAll(".vbox .val")[1];
+    el.querySelector("#vb-up").onclick=()=>{ val.textContent = String(+val.textContent+1); };
+    el.querySelector("#vb-reset").onclick=()=>{ val.textContent="19"; };
+  }
+  if(type==="ops"){
+    const rows=[["+","Penjumlahan","17 + 5","22"],["-","Pengurangan","17 - 5","12"],["*","Perkalian","17 * 5","85"],["/","Pembagian","17 / 5","3.4"],["//","Bagi, dibulatkan ke bawah","17 // 5","3"],["%","Sisa bagi","17 % 5","2"],["**","Pangkat","2 ** 3","8"]];
+    el.innerHTML = `<div class="scroll-x"><table class="optable"><thead><tr><th>Operator</th><th>Arti</th><th>Contoh</th><th>Hasil</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <p class="cap">Tips: angka genap atau ganjil bisa dicek dengan % 2. Jika hasilnya 0, angkanya genap.</p>`;
+  }
+  if(type==="ifflow"){
+    el.innerHTML = `<div class="slider"><label for="vf-n">Nilai</label><input id="vf-n" type="range" min="0" max="100" value="78"><output id="vf-o">78</output></div>
+    <svg class="ifsvg" viewBox="0 0 560 250" role="img" aria-label="Diagram alur if elif else">
+      <g font-family="JetBrains Mono, monospace" font-size="13">
+        <rect x="20" y="20" width="170" height="44" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5" id="d1"/>
+        <text x="105" y="47" text-anchor="middle" fill="var(--ink)">nilai &gt;= 85 ?</text>
+        <rect x="20" y="110" width="170" height="44" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5" id="d2"/>
+        <text x="105" y="137" text-anchor="middle" fill="var(--ink)">nilai &gt;= 70 ?</text>
+        <line x1="105" y1="64" x2="105" y2="110" stroke="var(--muted)" stroke-width="1.5" id="l12"/>
+        <text x="113" y="92" fill="var(--muted)" font-size="11">tidak</text>
+        <line x1="190" y1="42" x2="330" y2="42" stroke="var(--muted)" stroke-width="1.5" id="la"/>
+        <text x="245" y="35" fill="var(--muted)" font-size="11">ya</text>
+        <line x1="190" y1="132" x2="330" y2="132" stroke="var(--muted)" stroke-width="1.5" id="lb"/>
+        <text x="245" y="125" fill="var(--muted)" font-size="11">ya</text>
+        <line x1="105" y1="154" x2="105" y2="210" stroke="var(--muted)" stroke-width="1.5" id="l2c"/>
+        <line x1="105" y1="210" x2="330" y2="210" stroke="var(--muted)" stroke-width="1.5" id="lc"/>
+        <text x="113" y="185" fill="var(--muted)" font-size="11">tidak (else)</text>
+        <rect x="330" y="20" width="210" height="44" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5" id="ra"/>
+        <text x="435" y="47" text-anchor="middle" fill="var(--ink)">print("Grade A")</text>
+        <rect x="330" y="110" width="210" height="44" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5" id="rb"/>
+        <text x="435" y="137" text-anchor="middle" fill="var(--ink)">print("Grade B")</text>
+        <rect x="330" y="188" width="210" height="44" rx="8" fill="var(--surface)" stroke="var(--line)" stroke-width="1.5" id="rc"/>
+        <text x="435" y="215" text-anchor="middle" fill="var(--ink)">print("Perlu belajar")</text>
+      </g></svg>
+    <p class="cap">Geser nilainya. Python mengecek kondisi dari atas. Begitu ada yang benar, bloknya dijalankan dan kondisi di bawahnya dilewati.</p>`;
+    const inp=el.querySelector("#vf-n"), o=el.querySelector("#vf-o"), $=id=>el.querySelector("#"+id);
+    const paint=()=>{
+      const v=+inp.value; o.textContent=v;
+      const path = v>=85?["d1","la","ra"]:v>=70?["d1","l12","d2","lb","rb"]:["d1","l12","d2","l2c","lc","rc"];
+      ["d1","d2","ra","rb","rc"].forEach(k=>{ $(k).setAttribute("stroke", path.includes(k)?"var(--accent)":"var(--line)"); $(k).setAttribute("stroke-width", path.includes(k)?"2.5":"1.5"); });
+      ["l12","la","lb","l2c","lc"].forEach(k=>{ $(k).setAttribute("stroke", path.includes(k)?"var(--accent)":"var(--line)"); $(k).setAttribute("stroke-width", path.includes(k)?"2.5":"1.5"); });
+      ["ra","rb","rc"].forEach(k=>$(k).setAttribute("fill", path.includes(k)?"var(--accent-soft)":"var(--surface)"));
+    };
+    inp.addEventListener("input", paint); paint();
+  }
+  if(type==="loop"){
+    el.innerHTML = `<div class="step"><div class="mini"><span class="c"># kode</span>
+<span id="lp-1">for i in range(1, 6):</span>
+<span id="lp-2">    print(i * 2)</span></div><div class="mini" id="lp-out"><span class="c"># layar</span></div></div>
+    <div class="iter" id="lp-iter">${[1,2,3,4,5].map(n=>`<span>${n}</span>`).join("")}</div>
+    <div class="row"><button class="btn btn-soft" type="button" id="lp-next">Putaran berikutnya</button><button class="btn btn-soft" type="button" id="lp-reset">Ulangi</button><span class="cap" id="lp-cap">i belum dimulai</span></div>
+    <p class="cap">Setiap putaran, i mengambil angka berikutnya dari range(1, 6), lalu baris yang menjorok dijalankan sekali. Angka 6 tidak ikut.</p>`;
+    let k=0; const it=[...el.querySelectorAll("#lp-iter span")], out=el.querySelector("#lp-out"), cap=el.querySelector("#lp-cap");
+    const draw=()=>{ it.forEach((s,j)=>{ s.className = j===k-1?"now":(j<k-1?"past":""); });
+      out.innerHTML = '<span class="c"># layar</span>\n'+[...Array(k)].map((_,j)=>(j+1)*2).join("\n");
+      cap.textContent = k===0?"i belum dimulai":k>5?"":`i = ${k}, mencetak ${k} * 2 = ${k*2}`;
+      if(k>5){ cap.textContent="range habis, perulangan selesai"; } };
+    el.querySelector("#lp-next").onclick=()=>{ if(k<=5) k++; draw(); };
+    el.querySelector("#lp-reset").onclick=()=>{ k=0; draw(); };
+  }
+  if(type==="list"){
+    let data=["apel","mangga","jeruk"], fresh=-1, pick=-1;
+    el.innerHTML = `<div class="cells" id="ls"></div>
+    <div class="row"><button class="btn btn-soft" type="button" id="ls-add">buah.append("pisang")</button><button class="btn btn-soft" type="button" id="ls-get">buah[1]</button><button class="btn btn-soft" type="button" id="ls-last">buah[-1]</button><button class="btn btn-soft" type="button" id="ls-reset">Ulangi</button></div>
+    <p class="cap" id="ls-cap">len(buah) = 3. Angka kecil di bawah kotak adalah index.</p>`;
+    const box=el.querySelector("#ls"), cap=el.querySelector("#ls-cap");
+    const draw=()=>{ box.innerHTML=data.map((d,i)=>`<div class="cell"><div class="v ${i===fresh?"new":""} ${i===pick?"pick":""}">"${d}"</div><div class="i">${i}</div></div>`).join(""); };
+    el.querySelector("#ls-add").onclick=()=>{ const extra=["pisang","salak","durian","nanas"]; data.push(extra[(data.length-3)%extra.length]); fresh=data.length-1; pick=-1; cap.textContent=`Item baru masuk di index ${fresh}. len(buah) = ${data.length}.`; draw(); };
+    el.querySelector("#ls-get").onclick=()=>{ pick=1; fresh=-1; cap.textContent=`buah[1] = "${data[1]}". Index 1 adalah item kedua.`; draw(); };
+    el.querySelector("#ls-last").onclick=()=>{ pick=data.length-1; fresh=-1; cap.textContent=`buah[-1] = "${data[pick]}", item terakhir (index ${pick}).`; draw(); };
+    el.querySelector("#ls-reset").onclick=()=>{ data=["apel","mangga","jeruk"]; fresh=pick=-1; cap.textContent="len(buah) = 3. Angka kecil di bawah kotak adalah index."; draw(); };
+    draw();
+  }
+}
+
+/* ---------------- render ---------------- */
+const rail = document.getElementById("rail"), lesson = document.getElementById("lesson");
+function renderRail(){
+  rail.innerHTML = `<p class="lbl">Modul</p>` + MODULES.map((m,i)=>`<button class="mod-btn ${i===state.cur?"on":""}" data-i="${i}" type="button" ${i===state.cur?'aria-current="page"':""}>
+    <span class="n" aria-hidden="true">${ICONS[i]}</span><span class="t">${esc(m.short)}<small>${esc(m.sub)}</small></span><span class="dot ${modStatus(m)}" aria-label="${modStatus(m)==="done"?"selesai":modStatus(m)==="half"?"sebagian":"belum"}"></span></button>`).join("")
+    + `<p class="note">Modul selesai jika latihan coding lulus dan semua soal kuis terjawab benar. Progres tersimpan di browser ini.</p>`;
+  rail.querySelectorAll(".mod-btn").forEach(b=>b.onclick=()=>{ state.cur=+b.dataset.i; save(); render(); window.scrollTo({top:0, behavior:"smooth"}); });
+  const done = MODULES.filter(m=>modStatus(m)==="done").length;
+  document.getElementById("ovbar").style.width = (done/MODULES.length*100)+"%";
+  document.getElementById("ovtxt").textContent = `${done}/${MODULES.length}`;
+}
+function render(){
+  if(aiCtl) aiCtl.abort();
+  renderRail();
+  const m = MODULES[state.cur], p = prog(m.id), i = state.cur;
+  const exp = m.ex.tests[0].expected;
+  lesson.innerHTML = `
+  <div class="head"><div class="head-row"><div class="head-ic" aria-hidden="true">${ICONS[i]}</div><div><span class="eyebrow">Modul ${i+1} dari ${MODULES.length}</span><h2>${esc(m.title)}</h2></div></div><p>${esc(m.intro)}</p></div>
+  <section class="block"><h3>Materi</h3><div class="prose">${m.materi}</div><div class="key"><b>Ingat</b>${m.key}</div></section>
+  <section class="block"><h3>Lihat cara kerjanya <span class="tag">interaktif</span></h3><div class="vis" id="vis"></div></section>
+  <section class="block"><h3>Contoh kode</h3><p style="margin:0;color:var(--muted)">Jalankan, lalu coba ubah kodenya dan jalankan lagi untuk melihat perbedaannya.</p><div id="ed-contoh"></div></section>
+  <section class="block"><h3>Latihan coding <span class="tag sun">dicek otomatis</span></h3>
+    <div class="task"><p>${m.ex.soal}</p><div class="expect">${esc(exp)}</div></div>
+    <div id="ed-ex"></div>
+    <div class="row"><button class="btn btn-check" type="button" id="check">Cek jawaban</button><button class="btn btn-soft" type="button" id="hint">Petunjuk</button><button class="btn btn-soft" type="button" id="sol" ${p.tries>=2||p.ex?"":"hidden"}>Lihat contoh jawaban</button></div>
+    <div id="fb" aria-live="polite">${p.ex?`<div class="fb ok"><b>Latihan ini sudah lulus.</b>Kamu boleh mencoba cara lain dan mengecek lagi.</div>`:""}</div>
+    <div class="ai" id="ai" hidden>
+      <div class="ai-head">${kodi("hai")}<b>Tanya Kodi (AI)</b><small>Tutor AI membaca soal dan kodemu, lalu memberi petunjuk tanpa langsung membocorkan jawaban.</small></div>
+      <div class="chips">
+        <button class="chip" type="button" data-ask="salah">Kenapa kodeku salah?</button>
+        <button class="chip" type="button" data-ask="langkah">Beri petunjuk langkah berikutnya</button>
+        <button class="chip" type="button" data-ask="jelaskan">Jelaskan kodeku baris per baris</button>
+      </div>
+      <form class="ai-ask" id="ai-form"><input id="ai-q" type="text" placeholder="Atau tulis pertanyaanmu, mis. bedanya = dan == apa?" autocomplete="off" aria-label="Pertanyaan untuk AI"><button class="btn btn-check" type="submit" id="ai-send">Tanya</button><button class="btn btn-soft" type="button" id="ai-stop" hidden>Stop</button></form>
+      <div class="ai-ans" id="ai-ans" aria-live="polite" hidden></div>
+      <div class="ai-note">Jawaban AI bisa keliru. Cocokkan dengan materi dan jalankan kodenya untuk memastikan.</div>
+    </div>
+  </section>
+  <section class="block"><h3>Kuis</h3><div id="quiz"></div><div class="score" id="score"></div></section>
+  <div id="finish"></div>
+  <div class="nav">
+    <button class="btn btn-soft" type="button" id="prev" ${i===0?"hidden":""}>← ${i>0?esc(MODULES[i-1].short):""}</button>
+    <button class="btn btn-check" type="button" id="next" ${i===MODULES.length-1?"hidden":""}>${i<MODULES.length-1?esc(MODULES[i+1].short):""} →</button>
+  </div>`;
+  visual(m.visual, lesson.querySelector("#vis"));
+  makeEditor(lesson.querySelector("#ed-contoh"), {code:m.contoh, inputs:m.contohInputs, file:"contoh.py"});
+  const exEd = makeEditor(lesson.querySelector("#ed-ex"), {code:p.draft ?? m.ex.starter, inputs:m.ex.showInputs ?? null, file:"latihan.py"});
+  const taEx = lesson.querySelector("#ed-ex textarea");
+  taEx.addEventListener("input", ()=>{ p.draft = taEx.value; save(); });
+  const fb = lesson.querySelector("#fb");
+  lesson.querySelector("#hint").onclick=()=>{ fb.innerHTML = `<div class="fb info"><b>Petunjuk</b>${esc(m.ex.hint)}</div>`; };
+  lesson.querySelector("#sol").onclick=()=>{ fb.innerHTML = `<div class="fb info"><b>Contoh jawaban</b>Pelajari polanya, lalu coba ketik ulang dengan caramu sendiri.<pre>${esc(m.ex.solusi)}</pre></div>`; };
+  lesson.querySelector("#check").onclick = async (ev)=>{
+    const btn=ev.currentTarget; btn.disabled=true; btn.textContent="Mengecek…";
+    const res = await checkExercise(m, exEd.code);
+    btn.disabled=false; btn.textContent="Cek jawaban";
+    if(res.status==="ok"){
+      p.ex=true; save(); fb.innerHTML = `<div class="fb ok kodi">${kodi("senang")}<div><b>Benar, latihan lulus!</b>Output program sesuai untuk ${m.ex.tests.length>1?`semua ${m.ex.tests.length} data uji`:"data uji"}.</div></div>`;
+      renderRail(); finish();
+    } else {
+      p.tries=(p.tries||0)+1; save();
+      if(p.tries>=2) lesson.querySelector("#sol").hidden=false;
+      if(res.status==="engine") fb.innerHTML = `<div class="fb bad"><b>Mesin Python belum termuat.</b>Periksa koneksi internet, lalu muat ulang halaman.</div>`;
+      else if(res.status==="error"){ const d=describeError(res.r.err); fb.innerHTML = `<div class="fb bad kodi">${kodi("bingung")}<div><b>Program error: ${esc(d.name)}${d.line?` di baris ${d.line}`:""}</b>${esc(d.tip)}${res.r.starved?" Program ini juga meminta input lebih banyak dari yang disediakan data uji.":""}</div></div>`; }
+      else if(res.status==="must") fb.innerHTML = `<div class="fb bad"><b>Output sudah benar, tapi caranya belum sesuai soal.</b>Latihan ini harus memakai: ${res.missing.map(w=>`<code>${esc(w)}</code>`).join(", ")}. Hindari menulis jawabannya langsung di print().</div>`;
+      else {
+        const inp = res.t.inputs.length?` (input: ${res.t.inputs.join(", ")})`:"";
+        fb.innerHTML = `<div class="fb bad"><b>${res.near?"Hampir benar! Perhatikan huruf besar/kecil dan spasi.":"Output belum sesuai"}${inp}</b>Perbedaan pertama ada di baris output ke-${res.line+1}.
+          <div class="diff"><span>Seharusnya</span><span>${res.exp[res.line]!==undefined?esc(res.exp[res.line]):"(tidak ada baris lagi)"}</span><span>Output kamu</span><span>${res.got[res.line]!==undefined?esc(res.got[res.line]):"(tidak ada baris)"}</span></div></div>`;
+      }
+    }
+    lastCheck = fb.textContent.replace(/\s+/g," ").trim();
+  };
+  lastCheck = "";
+  setupAI(m, exEd);
+  renderQuiz(m);
+  lesson.querySelector("#prev").onclick=()=>{ state.cur--; save(); render(); window.scrollTo({top:0, behavior:"smooth"}); };
+  lesson.querySelector("#next").onclick=()=>{ state.cur++; save(); render(); window.scrollTo({top:0, behavior:"smooth"}); };
+  finish();
+}
+function renderQuiz(m){
+  const p=prog(m.id), box=lesson.querySelector("#quiz");
+  box.innerHTML = m.quiz.map((q,qi)=>`<div class="q" data-q="${qi}"><div class="qt">${qi+1}. ${esc(q.q)}</div>${q.code?`<pre>${esc(q.code)}</pre>`:""}
+    <div class="opts">${q.opts.map((o,oi)=>`<button class="opt" type="button" data-o="${oi}"><span class="k">${"ABCD"[oi]}</span><span>${esc(o)}</span></button>`).join("")}</div><div class="why" hidden></div></div>`).join("");
+  box.querySelectorAll(".q").forEach(qe=>{
+    const qi=+qe.dataset.q, q=m.quiz[qi], why=qe.querySelector(".why"), btns=[...qe.querySelectorAll(".opt")];
+    const lock=()=>{ btns.forEach(b=>b.disabled=true); btns[q.a].classList.add("right"); why.hidden=false; why.innerHTML=`<b>Benar.</b> ${esc(q.why)}`; };
+    if(p.quiz[qi]==="ok"||p.quiz[qi]==="ok1") lock();
+    btns.forEach(b=>b.onclick=()=>{
+      const oi=+b.dataset.o;
+      if(oi===q.a){ p.quiz[qi] = p.quiz[qi]==="miss"?"ok":"ok1"; save(); lock(); updateScore(m); renderRail(); finish(); }
+      else { b.classList.add("wrong"); b.disabled=true; p.quiz[qi]="miss"; save(); why.hidden=false; why.innerHTML="Belum tepat. Coba pilih jawaban lain."; }
+    });
+  });
+  updateScore(m);
+}
+function updateScore(m){
+  const p=prog(m.id), done=m.quiz.filter((_,i)=>p.quiz[i]==="ok"||p.quiz[i]==="ok1").length, first=m.quiz.filter((_,i)=>p.quiz[i]==="ok1").length;
+  lesson.querySelector("#score").textContent = done===m.quiz.length ? `Kuis selesai. Benar di percobaan pertama: ${first} dari ${m.quiz.length}.` : `${done} dari ${m.quiz.length} soal terjawab benar.`;
+}
+function finish(){
+  const el = lesson.querySelector("#finish"); if(!el) return;
+  const m=MODULES[state.cur], all=MODULES.every(x=>modStatus(x)==="done");
+  if(all) el.innerHTML = `<div class="done-card">${kodi("senang")}<div class="tx"><h3>Semua 6 modul selesai</h3><p>Kamu sudah mempelajari print, variabel, input, percabangan, perulangan, dan list. Langkah berikutnya: gabungkan semuanya menjadi program kecil, misalnya kalkulator nilai satu kelas.</p></div></div>`;
+  else if(modStatus(m)==="done") el.innerHTML = `<div class="fb ok"><b>Modul ${state.cur+1} selesai.</b>${state.cur<MODULES.length-1?`Lanjut ke modul ${state.cur+2}: ${esc(MODULES[state.cur+1].title)}.`:"Selesaikan modul lain yang belum hijau di daftar modul."}</div>`;
+  else el.innerHTML = "";
+}
+/* ---------------- tanya Kodi (AI) via Netlify Function ---------------- */
+let lastCheck = "", aiCtl = null;
+const AI_URL = "/api/tanya";
+function md(t){
+  const parts = String(t).split(/```(?:python|py)?\n?([\s\S]*?)(?:```|$)/);
+  return parts.map((s,i)=>{
+    if(i%2) return `<pre>${esc(s.replace(/\n$/,""))}</pre>`;
+    return s.split(/\n{2,}/).filter(x=>x.trim()).map(par=>"<p>"+esc(par)
+      .replace(/`([^`]+)`/g,"<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")
+      .replace(/^\s*[-*] /gm,"• ")
+      .replace(/\n/g,"<br>")+"</p>").join("");
+  }).join("");
+}
+function setupAI(m, exEd){
+  const box = lesson.querySelector("#ai"); if(!box) return;
+  const ans = box.querySelector("#ai-ans"), form = box.querySelector("#ai-form"), qIn = box.querySelector("#ai-q");
+  const stop = box.querySelector("#ai-stop"), send = box.querySelector("#ai-send"), chips=[...box.querySelectorAll(".chip")];
+  box.hidden = false;
+  if(location.protocol === "file:"){
+    ans.hidden = false;
+    ans.innerHTML = '<p class="think">Tanya Kodi (AI) aktif setelah website di-deploy ke Netlify, atau dijalankan dengan perintah netlify dev.</p>';
+    chips.forEach(c=>c.disabled=true); send.disabled = true; qIn.disabled = true;
+    return;
+  }
+  const busy = on=>{ chips.forEach(c=>c.disabled=on); send.disabled=on; stop.hidden=!on; };
+  async function ask(kind, question){
+    aiCtl = new AbortController();
+    busy(true); ans.hidden=false; ans.innerHTML = '<span class="think">Kodi sedang berpikir…</span>';
+    try{
+      const res = await fetch(AI_URL, {
+        method:"POST", headers:{"Content-Type":"application/json"}, signal:aiCtl.signal,
+        body: JSON.stringify({
+          kind, question: question || "",
+          modul: `${m.title} (${m.sub})`,
+          soal: m.ex.soal.replace(/<[^>]+>/g,""),
+          expected: m.ex.tests[0].expected,
+          must: m.ex.must,
+          code: exEd.code,
+          lastCheck
+        })
+      });
+      const data = await res.json().catch(()=>({}));
+      if(!res.ok || !data.text) throw new Error(data.error || "Kodi belum bisa menjawab. Coba lagi sebentar lagi.");
+      ans.innerHTML = md(data.text);
+    }catch(e){
+      ans.innerHTML = e.name === "AbortError" ? '<span class="think">Dihentikan.</span>' : `<p class="think">${esc(e.message || "Koneksi ke AI terputus. Coba lagi.")}</p>`;
+    }finally{ busy(false); }
+  }
+  chips.forEach(c=>c.onclick=()=>ask(c.dataset.ask));
+  form.onsubmit = e=>{ e.preventDefault(); const q=qIn.value.trim(); if(!q){ qIn.focus(); return; } ask("bebas", q.slice(0,500)); };
+  stop.onclick = ()=>aiCtl && aiCtl.abort();
+}
+render();
+</script>
+
+</body>
+</html>
